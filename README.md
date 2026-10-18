@@ -7,7 +7,8 @@ Published after the event ended.
 
 ## Team
 
-**Allies** — competing in the SIT category. Finished **16th of 2,571** teams.
+**Allies** — competing in the SIT category. **16th place, 2,571 points** on the frozen
+scoreboard; **21st place, 2,923 points** once the freeze lifted.
 
 | Member |
 |---|
@@ -73,7 +74,15 @@ tools/         reusable scripts produced while solving
 LESSONS.md     post-mortem: what worked, what didn't, and why
 ```
 
-## Tooling
+## Proof
 
-Kali VM driven through the HexStrike MCP toolkit, plus `pwntools`, `ffmpeg`,
-`tesseract`, `OpenCV`, and `transformers`/`peft` for the LoRA challenge.
+Scoreboard at the freeze — Allies in 16th:
+
+![CYBERBLITZ 2026 scoreboard, Allies 16th place](assets/scoreboard.png)
+
+The team's challenge board at the end of the event (green = solved):
+
+![CYBERBLITZ 2026 challenge board showing solved challenges](assets/challenges-solved.png)
+
+Every category was cleared except four: Whack-a-Mole and Unreliable Narrator: The Collector's
+Edition (misc), Heap Karaoke 2AM (pwn) and Port Authority (web).
