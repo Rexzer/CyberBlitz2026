@@ -15,6 +15,7 @@ Published after the event ended.
 | 13 | [ragebait](writeups/misc/ragebait.md) | Misc | `CYBLTZ2026{n0t_go04_3nou6h_m4t3}` |
 | 21 | [Lean Proofs](writeups/pwn/lean-proofs.md) | Pwn | `CYBLTZ2026{2b0c52a2c9d9136c46de9217e44b4633928b8cf9}` |
 | 22 | [Prims](writeups/pwn/prims.md) | Pwn | `CYBLTZ2026{c10aafab...4b768d}` |
+| 23 | [ROP2Impress](writeups/pwn/rop2impress.md) | Pwn | `CYBLTZ2026{5b7a9a9e...8fb813c2}` |
 | 24 | [Eight Registers, No Compiler](writeups/rev/eight-registers.md) | Reverse | `CYBLTZ2026{31gh7_r3G5_0n3_v01c3}` |
 | 25 | [fraude-code](writeups/rev/fraude-code.md) | Reverse | `CYBLTZ2026{please_bro_just_ten_more_subagents___...}` |
 | 26 | [Infinite GPA Hack](writeups/rev/infinite-gpa-hack.md) | Reverse | `CYBLTZ2026{inf1n1t3_gp4_gl1tch}` |
@@ -25,6 +26,7 @@ Published after the event ended.
 | 35 | [The Queue Is a Mobius Strip](writeups/web/mobius-strip.md) | Web | `CYBLTZ2026{d0ubL3_d3c0d3_5k1pp3d_7h3_l1n3}` |
 | 41 | [Follow the Roam](writeups/osint/follow-the-roam.md) | OSINT | `CYBLITZ2026{T1GrE4l_P4qU1t0}` ⚠️ |
 | 44 | [Berth Control](writeups/web/berth-control.md) | Web | `CYBLTZ2026{r3D1r3c7_ch3ck3d_0nly_0nc3}` |
+| 51 | [Prims Revenge](writeups/pwn/prims-revenge.md) | Pwn | `CYBLTZ2026{bee9662e5540ba718cc648f996613261}` |
 
 ⚠️ **Follow the Roam uses the `CYBLITZ` prefix** (extra `I`), unlike every other flag in the
 event. `CYBLTZ2026{T1GrE4l_P4qU1t0}` is rejected by the scoreboard. This looked like an author
@@ -34,7 +36,6 @@ typo in the challenge text but is in fact the accepted flag.
 
 | # | Challenge | Category | How far it got |
 |---|---|---|---|
-| 23 | [ROP2Impress](writeups/pwn/rop2impress.md) | Pwn | Full exploitation path derived, not weaponised |
 | 17 | [Whack-a-Mole](writeups/misc/whack-a-mole.md) | Misc | Protocol + forensic tooling built, detection unreliable |
 | 48 | Heap Karaoke 2AM | Pwn | Released late; not attempted |
 
@@ -50,7 +51,7 @@ writeups/
   forensics/   94-seconds-earlier.md  roam-logs.md
   misc/        ragebait.md  whack-a-mole.md
   osint/       follow-the-roam.md
-  pwn/         lean-proofs.md  prims.md  rop2impress.md
+  pwn/         lean-proofs.md  prims.md  prims-revenge.md  rop2impress.md
   rev/         eight-registers.md  fraude-code.md  infinite-gpa-hack.md  snake.md
   web/         berth-control.md  container-says-this-side-up.md  gate-zero.md
                mobius-strip.md  no-humans-were-logged-in.md
