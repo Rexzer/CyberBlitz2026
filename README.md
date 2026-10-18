@@ -7,7 +7,7 @@ Published after the event ended.
 
 ## Team
 
-**Allies** — competing in the SIT category.
+**Allies** — competing in the SIT category. Finished **16th of 2,571** teams.
 
 | Member |
 |---|
