@@ -84,5 +84,9 @@ The team's challenge board at the end of the event (green = solved):
 
 ![CYBERBLITZ 2026 challenge board showing solved challenges](assets/challenges-solved.png)
 
+Final team page after the freeze lifted — 21st place, 2,923 points, with the per-member split:
+
+![Allies team page, 21st place with 2,923 points](assets/team-page.png)
+
 Every category was cleared except four: Whack-a-Mole and Unreliable Narrator: The Collector's
 Edition (misc), Heap Karaoke 2AM (pwn) and Port Authority (web).
