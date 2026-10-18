@@ -17,7 +17,7 @@ Published after the event ended.
 | Alaric |
 
 The team solved more than is documented here. This repository collects the challenges ZR
-worked — see [Attribution](#attribution) below.
+worked.
 
 ## Solved
 
@@ -73,26 +73,7 @@ tools/         reusable scripts produced while solving
 LESSONS.md     post-mortem: what worked, what didn't, and why
 ```
 
-## Attribution
+## Tooling
 
-This was a team event and challenges were worked in parallel, so provenance is worth stating
-plainly.
-
-Every writeup in this repository was written by **ZR**. Where a challenge was first scored by
-another member of the team, or worked jointly, that is called out below and in the writeup
-itself.
-
-- **First solves:** Prims (#22), Eight Registers (#24).
-- **Independently derived, a teammate scored it first:** fraude-code (#25), ragebait (#13),
-  Roam Logs (#9) — the Roam Logs decode was re-derived from scratch because its output is the
-  input to Follow the Roam.
-- **Collaborative:** Follow the Roam (#41). A teammate found fragment 1 and identified that the
-  payload sits at an ultimate cast; ZR traced the OSINT chain and located the exact 2-frame
-  insert. Credited in detail in that writeup.
-- **Also solved and written up:** Same Kopi Different Cup (#2), 94 Seconds Earlier (#5), Lean
-  Proofs (#21), ROP2Impress (#23), Snake (#28), the Web set (#29, #31, #33, #35, #44) and Prims
-  Revenge (#51).
-- **Unsolved, notes published anyway:** Whack-a-Mole (#17).
-
-Tooling: Kali VM driven through the HexStrike MCP toolkit, plus `pwntools`, `ffmpeg`,
+Kali VM driven through the HexStrike MCP toolkit, plus `pwntools`, `ffmpeg`,
 `tesseract`, `OpenCV`, and `transformers`/`peft` for the LoRA challenge.
