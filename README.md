@@ -7,8 +7,8 @@ Published after the event ended.
 
 ## Team
 
-**Allies** — competing in the SIT category. **16th place, 2,571 points** on the frozen
-scoreboard; **21st place, 2,923 points** once the freeze lifted.
+**Allies** — competing in the SIT category. **16th place, 2,571 points**
+scoreboard; competing in the OPEN category. **21st place, 2,923 points**
 
 | Member |
 |---|
